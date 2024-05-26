@@ -10,8 +10,11 @@
     "test": "jest"
   },
   "dependencies": {
+    "@realm/react": "^0.7.0",
     "react": "18.2.0",
-    "react-native": "0.74.1"
+    "react-native": "0.74.1",
+    "react-native-maps": "^1.15.4",
+    "realm": "^12.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
