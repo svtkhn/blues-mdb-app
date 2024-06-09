@@ -6,22 +6,24 @@ import { AppProvider, UserProvider, RealmProvider, useAuth, useQuery } from '@re
 
 export class Telemetry extends Realm.Object<Telemetry> {
   _id!: BSON.ObjectId;
-  humid?: number;
-  temp?: number;
-  lat?: number;
-  lon?: number;
-
+  device!: string;
+  lat!: number;
+  lon!: number;
+  orientation!: string;
+  timestamp!: Date;
+  
   static schema: ObjectSchema = {
     name: 'telemetry',
     properties: {
       _id: 'objectId',
-      humid: 'double?',
-      temp: 'double?',
-      lat: 'double?',
-      lon: 'double?',
+      device: 'string',
+      lat: 'double',
+      lon: 'double',
+      orientation: 'string',
+      timestamp: 'date',
     },
     primaryKey: '_id',
-  };
+    };
 }
 
 export const App = () => {
@@ -35,7 +37,7 @@ export const App = () => {
               initialSubscriptions: {
                 update: (mutableSubs, realm) => {
                   mutableSubs.add(
-                    realm.objects(Telemetry).filtered('temp > 0'),
+                    realm.objects(Telemetry).filtered("device == 'alex-device'"),
                   );
                 },
               },
@@ -60,8 +62,8 @@ function MainPage() {
         <ScrollView contentContainerStyle={styles.dataContainer}>
           {telemetry.map((item) => (
             <View key={item._id.toString()} style={styles.dataItem}>
-              <Text>Temp: {item.temp ?? "N/A"}</Text>
-              <Text>Humidity: {item.humid ?? "N/A"}</Text>
+              <Text>device: {item.device ?? "N/A"}</Text>
+              <Text>orientation: {item.orientation ?? "N/A"}</Text>
               <Text>Lat: {item.lat ?? "N/A"}</Text>
               <Text>Lon: {item.lon ?? "N/A"}</Text>
             </View>
@@ -83,8 +85,8 @@ function MainPage() {
               <Marker
                 key={item._id.toString()}
                 coordinate={{ latitude: item.lat, longitude: item.lon }}
-                title={`Temp: ${item.temp}`}
-                description={`Humidity: ${item.humid}`}
+                title={`orientation: ${item.orientation}`}
+                description={`orientation: ${item.orientation}`}
               />
             )
           ))}
