@@ -1,8 +1,8 @@
-import React from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View, Switch } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Realm, { BSON, ObjectSchema } from 'realm';
-import { AppProvider, UserProvider, RealmProvider, useAuth, useQuery } from '@realm/react';
+import { AppProvider, UserProvider, RealmProvider, useAuth, useQuery, useUser } from '@realm/react';
 
 export class Telemetry extends Realm.Object<Telemetry> {
   _id!: BSON.ObjectId;
@@ -11,7 +11,7 @@ export class Telemetry extends Realm.Object<Telemetry> {
   lon!: number;
   orientation!: string;
   timestamp!: Date;
-  
+
   static schema: ObjectSchema = {
     name: 'telemetry',
     properties: {
@@ -23,7 +23,7 @@ export class Telemetry extends Realm.Object<Telemetry> {
       timestamp: 'date',
     },
     primaryKey: '_id',
-    };
+  };
 }
 
 export const App = () => {
@@ -37,7 +37,7 @@ export const App = () => {
               initialSubscriptions: {
                 update: (mutableSubs, realm) => {
                   mutableSubs.add(
-                    realm.objects(Telemetry).filtered("device == 'alex-device'"),
+                    realm.objects(Telemetry),
                   );
                 },
               },
@@ -53,9 +53,48 @@ export const App = () => {
   );
 };
 
+function ToggleDevice() {
+  const user = useUser();
+  const [isEnabled, setIsEnabled] = useState(true);
+
+  const toggleSwitch = async () => {
+    setIsEnabled(previousState => !previousState);
+
+    try {
+      if (isEnabled) {
+        await user?.callFunction('disable_device');
+      } else {
+        await user?.callFunction('enable_device');
+      }
+    } catch (error) {
+      console.error('Failed to enable device:', error);
+    }
+  };
+
+  return (
+    <View style={[
+      // styles.container,
+      {
+        // Try setting `flexDirection` to `"row"`.
+        flexDirection: 'row',
+        alignItems: 'center',
+        margin: 10
+      },
+    ]}>
+      <Text>Device Enabled:</Text>
+      <Switch
+        trackColor={{ false: '#767577', true: '#81b0ff' }}
+        thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+        ios_backgroundColor="#3e3e3e"
+        onValueChange={toggleSwitch}
+        value={isEnabled}
+      />
+    </View>
+  )
+}
+
 function MainPage() {
   const telemetry = useQuery(Telemetry);
-
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -92,6 +131,7 @@ function MainPage() {
           ))}
         </MapView>
       </View>
+      <ToggleDevice></ToggleDevice>
     </View>
   );
 }
@@ -137,6 +177,20 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 10,
     color: 'red',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+  },
+  button: {
+    padding: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
